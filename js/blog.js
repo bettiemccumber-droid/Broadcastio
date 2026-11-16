@@ -147,7 +147,7 @@
    * 绑定搜索、分类、排序和分页。
    * @returns {void}
    */
-  function init() {
+  async function init() {
     readFromUrl();
     const chips = document.getElementById("chips");
     const names = ["All", ...window.BROADCASTIO.categories.map((category) => category.name)];
@@ -192,6 +192,36 @@
       state.page = Number(button.dataset.page);
       render({ scroll: true });
     });
+
+    try {
+      const response = await fetch("/api/posts", { cache: "no-store" });
+      if (response.ok) {
+        const posts = await response.json();
+        if (Array.isArray(posts)) {
+          const known = new Set(window.BROADCASTIO.articles.map((item) => item.id));
+          posts.forEach((post) => {
+            if (!post?.slug || known.has(post.slug)) return;
+            window.BROADCASTIO.articles.unshift({
+              id: post.slug,
+              title: post.title,
+              dek: post.excerpt || "",
+              category: post.category || "Product Reviews",
+              date: post.date,
+              minutes: post.readTime || 1,
+              image: post.image || "",
+              imageAlt: post.title,
+              role: "Desk",
+              tags: Array.isArray(post.keywords) ? post.keywords : [],
+              excerpt: post.excerpt || "",
+              productIds: [],
+              body: []
+            });
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Published posts unavailable", error);
+    }
 
     render();
     if (window.location.hash === "#search") search.focus();

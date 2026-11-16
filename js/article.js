@@ -109,11 +109,45 @@
    * 渲染一篇文章，或显示未找到。
    * @returns {void}
    */
-  function init() {
+  async function loadPublished(slug) {
+    const response = await fetch(`/api/posts/${encodeURIComponent(slug)}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    const body = await response.json();
+    const listResponse = await fetch("/api/posts", { cache: "no-store" });
+    const posts = listResponse.ok ? await listResponse.json() : [];
+    const meta = Array.isArray(posts) ? posts.find((item) => item.slug === slug) : null;
+    if (!meta || typeof body.bodyHtml !== "string") return null;
+    return { ...meta, bodyHtml: body.bodyHtml };
+  }
+
+  async function init() {
     bindProgress();
     const root = document.getElementById("article-root");
-    const id = new URLSearchParams(window.location.search).get("id");
-    const article = window.Site.findById(window.BROADCASTIO.articles, id || "");
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("slug") || "";
+    const id = params.get("id") || "";
+    const article = window.Site.findById(window.BROADCASTIO.articles, id);
+    if (!article && (slug || id)) {
+      const post = await loadPublished(slug || id).catch(() => null);
+      if (post) {
+        document.title = `${post.title} — Broadcastio`;
+        root.innerHTML = `
+          <article>
+            <div class="article-sheet">
+              <header class="article-head">
+                <div>
+                  <p class="crumbs"><a href="blog.html">Journal</a><span aria-hidden="true">/</span><span>${window.Site.escapeHtml(post.title)}</span></p>
+                  <h1>${window.Site.escapeHtml(post.title)}</h1>
+                  <p class="lede">${window.Site.escapeHtml(post.excerpt || "")}</p>
+                </div>
+              </header>
+              ${post.image ? `<img class="article-hero-img" src="${window.Site.escapeHtml(post.image)}" alt="">` : ""}
+              <div class="article-main prose">${post.bodyHtml}</div>
+            </div>
+          </article>`;
+        return;
+      }
+    }
     if (!article) {
       document.title = "Piece not found — Broadcastio";
       root.innerHTML = `<div class="wrap not-found"><h1>This piece is not on the desk.</h1><p><a href="blog.html">Back to the journal</a></p></div>`;
