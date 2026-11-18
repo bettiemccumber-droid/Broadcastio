@@ -3,20 +3,39 @@
  */
 (function () {
   /**
-   * 产品推荐嵌入块。
+   * 把正文里的 [[style:url|label]] 标记转成带样式的超链接。
+   * @param {string} text
+   * @returns {string}
+   */
+  function formatRichText(text) {
+    const escaped = window.Site.escapeHtml(text);
+    return escaped.replace(/\[\[(signal|mark|quiet|pill):([^|\]]+)\|([^\]]+)\]\]/g, (_match, style, href, label) => {
+      const safeHref = window.Site.escapeHtml(href);
+      const safeLabel = window.Site.escapeHtml(label);
+      const external = /^https?:\/\//i.test(href);
+      const rel = external ? ` rel="noopener sponsored"` : "";
+      const target = external ? ` target="_blank"` : "";
+      return `<a class="ink-link ink-link--${style}" href="${safeHref}"${target}${rel}>${safeLabel}</a>`;
+    });
+  }
+
+  /**
+   * 产品推荐嵌入块（轻量，不抢正文）。
    * @param {Object} product
    * @returns {string}
    */
   function productEmbed(product) {
-    const href = `product.html?id=${encodeURIComponent(product.id)}`;
+    const href = product.buyUrl || `product.html?id=${encodeURIComponent(product.id)}`;
+    const external = Boolean(product.buyUrl);
+    const attrs = external ? ` target="_blank" rel="noopener sponsored"` : "";
     return `
-      <a class="product-embed" href="${href}">
+      <a class="product-embed product-embed--soft" href="${window.Site.escapeHtml(href)}"${attrs}>
         <img src="${window.Site.escapeHtml(product.image)}" alt="${window.Site.escapeHtml(product.imageAlt)}" width="480" height="320">
         <span>
           <span class="kicker">${window.Site.escapeHtml(product.verdict)}</span>
           <strong>${window.Site.escapeHtml(product.name)}</strong>
           <em>${window.Site.escapeHtml(product.summary)}</em>
-          <span class="meta"><span>${window.Site.escapeHtml(product.price)}</span><span>${product.rating.toFixed(1)} / 5</span></span>
+          <span class="meta"><span>${window.Site.escapeHtml(product.price)}</span><span>${product.rating.toFixed(1)} / 5</span>${external ? "<span>Open Qronge</span>" : ""}</span>
         </span>
       </a>`;
   }
@@ -32,18 +51,22 @@
       if (block.type === "p") {
         const cls = lead ? ' class="drop"' : "";
         lead = false;
-        return `<p${cls}>${window.Site.escapeHtml(block.text)}</p>`;
+        return `<p${cls}>${formatRichText(block.text)}</p>`;
       }
       if (block.type === "h2") return `<h2>${window.Site.escapeHtml(block.text)}</h2>`;
       if (block.type === "ul") {
-        const items = block.items.map((item) => `<li>${window.Site.escapeHtml(item)}</li>`).join("");
+        const items = block.items.map((item) => `<li>${formatRichText(item)}</li>`).join("");
         return `<ul>${items}</ul>`;
       }
       if (block.type === "quote") {
-        return `<blockquote class="pullquote"><p>${window.Site.escapeHtml(block.text)}</p><cite>${window.Site.escapeHtml(block.cite || "Broadcastio Desk")}</cite></blockquote>`;
+        return `<blockquote class="pullquote"><p>${formatRichText(block.text)}</p><cite>${window.Site.escapeHtml(block.cite || "Broadcastio Desk")}</cite></blockquote>`;
       }
       if (block.type === "image") {
-        return `<figure class="figure-note"><img src="${window.Site.escapeHtml(block.src)}" alt="${window.Site.escapeHtml(block.alt)}" width="1200" height="675" loading="lazy"><figcaption>${window.Site.escapeHtml(block.caption || "")}</figcaption></figure>`;
+        const tone = block.tone ? ` figure-note--${window.Site.escapeHtml(block.tone)}` : "";
+        return `<figure class="figure-note${tone}"><img src="${window.Site.escapeHtml(block.src)}" alt="${window.Site.escapeHtml(block.alt)}" width="1200" height="675" loading="lazy"><figcaption>${formatRichText(block.caption || "")}</figcaption></figure>`;
+      }
+      if (block.type === "note") {
+        return `<aside class="soft-note"><p class="kicker">${window.Site.escapeHtml(block.kicker || "Desk note")}</p><p>${formatRichText(block.text)}</p></aside>`;
       }
       if (block.type === "product") {
         const product = window.Site.findById(window.BROADCASTIO.products, block.id);

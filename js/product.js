@@ -30,6 +30,9 @@
     const articleLink = article
       ? `<a class="btn btn-ink" href="article.html?id=${encodeURIComponent(article.id)}">Read the field note</a>`
       : "";
+    const buyLink = product.buyUrl
+      ? `<a class="btn btn-ink" href="${window.Site.escapeHtml(product.buyUrl)}" target="_blank" rel="noopener sponsored">Buy at Qronge</a>`
+      : "";
     const related = window.BROADCASTIO.products
       .filter((item) => item.id !== product.id)
       .slice(0, 3)
@@ -48,7 +51,7 @@
           <p class="lede">${window.Site.escapeHtml(product.summary)}</p>
           <p class="meta"><span>${product.rating.toFixed(1)} / 5</span><span>Best for ${window.Site.escapeHtml(product.bestFor)}</span><span>Tested ${window.Site.formatDate(product.tested)}</span></p>
           ${scores}
-          <div class="hero-actions">${articleLink}<a class="btn btn-ink" href="products.html" style="background:transparent;color:var(--ink);border-color:var(--line)">All gear</a></div>
+          <div class="hero-actions">${buyLink}${articleLink}<a class="btn btn-ink" href="products.html" style="background:transparent;color:var(--ink);border-color:var(--line)">All gear</a></div>
         </div>
       </div>
       <div class="prose" style="max-width:46rem;padding-top:12px">
