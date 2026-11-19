@@ -64,7 +64,9 @@
    * @returns {string}
    */
   function articleCard(article) {
-    const href = `article.html?id=${encodeURIComponent(article.id)}`;
+    const href = article.fromApi
+      ? `article.html?slug=${encodeURIComponent(article.id)}`
+      : `article.html?id=${encodeURIComponent(article.id)}`;
     return `
       <article class="card observe">
         <a class="card-link" href="${href}">
@@ -79,6 +81,47 @@
           </div>
         </a>
       </article>`;
+  }
+
+  /**
+   * 把 AffiliAds /api/posts 发布的文章并入本地列表（最新在前，不覆盖静态 id）。
+   * @returns {Promise<number>} 新并入的篇数
+   */
+  async function mergePublishedPosts() {
+    if (!window.BROADCASTIO || !Array.isArray(window.BROADCASTIO.articles)) return 0;
+    try {
+      const response = await fetch("/api/posts", { cache: "no-store" });
+      if (!response.ok) return 0;
+      const posts = await response.json();
+      if (!Array.isArray(posts)) return 0;
+      const known = new Set(window.BROADCASTIO.articles.map((item) => item.id));
+      let added = 0;
+      posts.forEach((post) => {
+        if (!post?.slug || known.has(post.slug)) return;
+        known.add(post.slug);
+        added += 1;
+        window.BROADCASTIO.articles.unshift({
+          id: post.slug,
+          title: post.title,
+          dek: post.excerpt || "",
+          category: post.category || "Product Reviews",
+          date: post.date,
+          minutes: post.readTime || 1,
+          image: post.image || "assets/images/hero.jpg",
+          imageAlt: post.title || "",
+          role: post.author || "Desk",
+          tags: Array.isArray(post.keywords) ? post.keywords : [],
+          excerpt: post.excerpt || "",
+          productIds: [],
+          body: [],
+          fromApi: true
+        });
+      });
+      return added;
+    } catch (error) {
+      console.error("Published posts unavailable", error);
+      return 0;
+    }
   }
 
   /**
@@ -244,6 +287,7 @@
     articleCard,
     productCard,
     findById,
-    watch
+    watch,
+    mergePublishedPosts
   };
 })();

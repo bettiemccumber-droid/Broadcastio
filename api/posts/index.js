@@ -53,6 +53,12 @@ export default async function handler(req, res) {
     return;
   }
 
+  // AffiliAds / ops consoles often POST a dryRun probe before the first real article.
+  if (payload && typeof payload === "object" && !Array.isArray(payload) && /** @type {{ dryRun?: unknown }} */ (payload).dryRun === true) {
+    sendJson(res, 200, { ok: true, dryRun: true });
+    return;
+  }
+
   const parsed = parsePublishBody(payload);
   if (!parsed.ok) {
     sendJson(res, 400, { error: parsed.error });

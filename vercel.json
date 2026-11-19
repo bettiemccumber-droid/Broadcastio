@@ -2,6 +2,9 @@
   "functions": {
     "api/posts/index.js": {
       "includeFiles": "js/data.js"
+    },
+    "api/posts/[slug].js": {
+      "includeFiles": "js/data.js"
     }
   }
 }

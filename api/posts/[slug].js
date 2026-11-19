@@ -2,11 +2,11 @@ import { applyApiHeaders, isPublishAuthorized, sendJson } from "../../lib/http.j
 import { getPublishedBody, removePublishedPost, StorageError } from "../../lib/posts-store.js";
 
 /**
- * GET https://www.ajiusblogs.top/api/posts/:slug
+ * GET /api/posts/:slug
  * Returns { bodyHtml } for one API-published article. No PUBLISH_TOKEN.
- * Static articles stay in js/articles-content.js and are not served here.
+ * Static journal pieces stay in js/data.js and are not served here.
  *
- * DELETE https://www.ajiusblogs.top/api/posts/:slug
+ * DELETE /api/posts/:slug
  * Authorization: Bearer <PUBLISH_TOKEN>
  * Removes one API-published article. Static posts are left untouched.
  *

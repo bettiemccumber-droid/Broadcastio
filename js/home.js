@@ -6,13 +6,19 @@
    * 渲染首页动态区块。
    * @returns {void}
    */
+  function articleHref(article) {
+    return article.fromApi
+      ? `article.html?slug=${encodeURIComponent(article.id)}`
+      : `article.html?id=${encodeURIComponent(article.id)}`;
+  }
+
   function renderHome() {
     const data = window.BROADCASTIO;
     const articles = window.Site.sortByDate(data.articles, "newest");
     const latest = articles[0];
     const link = document.getElementById("hero-latest");
     if (link && latest) {
-      link.href = `article.html?id=${encodeURIComponent(latest.id)}`;
+      link.href = articleHref(latest);
       link.textContent = latest.title;
     }
 
@@ -32,7 +38,7 @@
 
     const feature = document.getElementById("feature");
     if (feature && latest) {
-      const href = `article.html?id=${encodeURIComponent(latest.id)}`;
+      const href = articleHref(latest);
       feature.innerHTML = `
         <a class="feature observe" href="${href}">
           <div class="feature-media">
@@ -82,13 +88,15 @@
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      renderHome();
-      bindNewsletter();
-    });
-  } else {
+  async function boot() {
+    await window.Site.mergePublishedPosts();
     renderHome();
     bindNewsletter();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
   }
 })();

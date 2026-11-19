@@ -154,20 +154,30 @@
       const post = await loadPublished(slug || id).catch(() => null);
       if (post) {
         document.title = `${post.title} — Broadcastio`;
+        const when = post.date ? window.Site.formatDate(post.date) : "";
         root.innerHTML = `
           <article>
             <div class="article-sheet">
               <header class="article-head">
                 <div>
-                  <p class="crumbs"><a href="blog.html">Journal</a><span aria-hidden="true">/</span><span>${window.Site.escapeHtml(post.title)}</span></p>
+                  <p class="crumbs"><a href="blog.html">Journal</a><span aria-hidden="true">/</span><span>${window.Site.escapeHtml(post.category || "Journal")}</span><span aria-hidden="true">/</span><span>${window.Site.escapeHtml(post.title)}</span></p>
+                  <p class="kicker">${window.Site.escapeHtml(post.category || "Product Reviews")}</p>
                   <h1>${window.Site.escapeHtml(post.title)}</h1>
                   <p class="lede">${window.Site.escapeHtml(post.excerpt || "")}</p>
+                </div>
+                <div class="meta-row">
+                  <p class="meta"><span>By ${window.Site.escapeHtml(post.author || "Broadcastio Desk")}</span>${when ? `<time datetime="${window.Site.escapeHtml(post.date)}">${when}</time>` : ""}<span>${post.readTime || 1} min read</span></p>
+                  <button class="text-btn" type="button" id="copy-link">Copy link</button>
                 </div>
               </header>
               ${post.image ? `<img class="article-hero-img" src="${window.Site.escapeHtml(post.image)}" alt="">` : ""}
               <div class="article-main prose">${post.bodyHtml}</div>
             </div>
           </article>`;
+        document.getElementById("copy-link").addEventListener("click", (event) => {
+          copyLink(event.currentTarget);
+        });
+        window.Site.watch(root);
         return;
       }
     }
