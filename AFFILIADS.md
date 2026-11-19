@@ -13,7 +13,7 @@ Broadcastio 已按与 AJiusBlog 相同的发文约定开放接口。员工在 Af
 | Name | 说明 |
 | --- | --- |
 | `PUBLISH_TOKEN` | 自拟长随机串；AffiliAds 里填同一串 |
-| `SITE_ORIGIN` | 站点根地址，如 `https://broadcastio.vercel.app`（不要末尾 `/`） |
+| `SITE_ORIGIN` | 站点根地址，生产填 `https://www.broadcastio.top`（不要末尾 `/`） |
 | `BLOB_READ_WRITE_TOKEN` | 连接 Blob 后一般会自动出现 |
 
 4. Redeploy，确认线上打开首页正常。
@@ -22,10 +22,11 @@ Broadcastio 已按与 AJiusBlog 相同的发文约定开放接口。员工在 Af
 
 | 字段 | 填什么 |
 | --- | --- |
-| 名称 | `Broadcastio` |
-| 站点 / 发布地址 | `https://你的域名/api/posts` |
+| 名称 | `broadcastio` |
+| 域名 | `www.broadcastio.top` |
+| 发布地址 | `https://www.broadcastio.top/api/posts`（只要一个 `/`，不要写成 `//api`） |
 | 发布令牌 / Token | 与 Vercel 环境变量 `PUBLISH_TOKEN` 相同 |
-| 文章页规则（若有） | `https://你的域名/article.html?slug={slug}` |
+| 文章页规则（若有） | `https://www.broadcastio.top/article.html?slug={slug}` |
 
 测试连接时，本站对 `{"dryRun":true}` 会返回 `{ ok: true, dryRun: true }`，不会落库。
 
